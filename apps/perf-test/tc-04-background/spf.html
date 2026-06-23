@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TC-04 · Background · Config A (SPF)</title>
+  <link rel="stylesheet" href="/apps/perf-test/_shared/styles.css" />
+  <link rel="stylesheet" href="/packages/skins/dist/default/minimal/css/video.css" />
+</head>
+
+<body>
+  <div class="bg-stage">
+    <video-player>
+      <video-minimal-skin id="skin">
+        <simple-spf-background-video id="media" autoplay muted loop preload="auto" playsinline
+          crossorigin="anonymous"></simple-spf-background-video>
+      </video-minimal-skin>
+    </video-player>
+    <div class="hero">
+      <h1>Ambient video — SPF</h1>
+    </div>
+  </div>
+
+  <script type="module">
+    import { attachMediaTiming, markPlayerReady } from '/apps/perf-test/_shared/perf.js';
+    import { CMAF_SOURCE } from '/apps/perf-test/_shared/sources.js';
+
+    await import('/packages/html/cdn/video-minimal.js');
+    await import('/packages/html/cdn/media/simple-spf-background-video.js');
+
+    const media = document.getElementById('media');
+    media.setAttribute('src', CMAF_SOURCE.url);
+    markPlayerReady();
+    attachMediaTiming(media, { autoplay: true });
+  </script>
+</body>
+
+</html>

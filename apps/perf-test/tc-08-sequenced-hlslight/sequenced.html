@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TC-08 · Sequenced lazy load · Config E (SPF → hls.light)</title>
+    <link rel="stylesheet" href="/apps/perf-test/_shared/styles.css" />
+    <link rel="stylesheet" href="/packages/skins/dist/default/minimal/css/video.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <h1>TC-08 · Sequenced lazy · Config E — SPF → hls.light</h1>
+      <div class="meta">
+        Same flow as TC-07 with hls.light loaded instead of the full HLS.js bundle.
+        Optional — run only if TC-06 confirms hls.light is meaningfully smaller
+        and TC-07 results suggest the sequenced path is worth optimizing.
+      </div>
+      <div id="root"></div>
+    </div>
+
+    <script type="module">
+      import { attachMediaTiming, markPhase, markPlayerReady } from '/apps/perf-test/_shared/perf.js';
+      import { TS_SOURCE } from '/apps/perf-test/_shared/sources.js';
+
+      // Phase 1 — SPF + player shell load.
+      await import('/packages/html/cdn/video-minimal.js');
+      await import('/packages/html/cdn/media/simple-hls-video.js');
+
+      const root = document.getElementById('root');
+      root.innerHTML = `
+        <video-player>
+          <video-minimal-skin>
+            <simple-hls-video id="initial" playsinline crossorigin="anonymous"></simple-hls-video>
+          </video-minimal-skin>
+        </video-player>
+      `;
+      markPhase('spf-init');
+      markPlayerReady();
+
+      // Phase 2 — mocked format-detection endpoint (20 ms simulated latency).
+      const format = await new Promise((resolve) => {
+        setTimeout(() => resolve('ts'), 20);
+      });
+      markPhase('endpoint-response');
+
+      // Phase 3 — lazy-import the hls.light media-element bundle.
+      if (format === 'ts') {
+        await import('/packages/html/cdn/media/hls-light-video.js');
+        markPhase('hlsjs-loaded');
+
+        // Phase 4 — swap the SPF element out for <hls-light-video> with the TS source.
+        const initial = document.getElementById('initial');
+        const hlsLight = document.createElement('hls-light-video');
+        hlsLight.id = 'media';
+        hlsLight.setAttribute('autoplay', '');
+        hlsLight.setAttribute('muted', '');
+        hlsLight.setAttribute('preload', 'auto');
+        hlsLight.setAttribute('playsinline', '');
+        hlsLight.setAttribute('crossorigin', 'anonymous');
+        hlsLight.setAttribute('src', TS_SOURCE.url);
+        initial.replaceWith(hlsLight);
+
+        attachMediaTiming(hlsLight, { autoplay: true });
+      }
+    </script>
+  </body>
+</html>

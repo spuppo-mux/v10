@@ -1,0 +1,99 @@
+html,
+body {
+  height: 100%;
+  padding: 0;
+  margin: 0;
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #fff;
+  background: #0b0b0c;
+}
+
+#root {
+  min-width: 400px;
+  min-height: 200px;
+}
+
+.shell {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  align-items: center;
+  padding: 24px 16px 40px;
+}
+
+.shell h1 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  opacity: 0.92;
+}
+
+.shell .meta {
+  font-size: 13px;
+  text-align: center;
+  opacity: 0.65;
+}
+
+video-player {
+  display: block;
+  width: 100%;
+  max-width: 960px;
+}
+
+video-minimal-skin,
+video-skin {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+}
+
+/* Background variant — fullscreen ambient layout for TC-04. */
+.bg-stage {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: #000;
+}
+
+.bg-stage video-player {
+  width: 100%;
+  max-width: none;
+  height: 100%;
+}
+
+.bg-stage video-minimal-skin,
+.bg-stage video-skin {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto;
+}
+
+.bg-stage video-minimal-skin video,
+.bg-stage video-minimal-skin hls-video,
+.bg-stage video-minimal-skin simple-hls-video,
+.bg-stage video-skin video,
+.bg-stage video-skin hls-video,
+.bg-stage video-skin simple-hls-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.bg-stage .hero {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  max-width: 720px;
+  padding: 0 8vw;
+}
+
+.bg-stage .hero h1 {
+  margin: 0;
+  font-size: clamp(36px, 6vw, 72px);
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+}

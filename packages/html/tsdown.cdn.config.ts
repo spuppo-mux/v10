@@ -33,12 +33,31 @@ const media = [
   'native-hls-video',
   'simple-hls-audio-only',
   'simple-hls-video',
+  'simple-spf-background-video',
   'dash-video',
 ];
 
 const entries = [
   ...presets.map((name) => ({ src: `src/cdn/${name}.ts`, name })),
   ...media.map((name) => ({ src: `src/cdn/media/${name}.ts`, name: `media/${name}` })),
+];
+
+/**
+ * Aliased CDN entries — each builds as a separate config so its alias map
+ * doesn't bleed into the main shared-chunk graph.
+ *
+ * `hls-light-video` is the only consumer today: it reuses the `<hls-video>`
+ * implementation but aliases `hls.js` → `hls.js/light` at bundle time,
+ * producing a custom element backed by the trimmed hls.light build. Same
+ * source, different bundled library. Used by the perf-test suite to compare
+ * hls.light vs hls.js as a drop-in swap.
+ */
+const aliasedEntries = [
+  {
+    src: 'src/cdn/media/hls-light-video.ts',
+    name: 'media/hls-light-video',
+    alias: { 'hls.js': 'hls.js/light' },
+  },
 ];
 
 /**
@@ -122,6 +141,54 @@ for (const mode of buildModes) {
       }),
     },
   });
+
+  // One separate config per aliased entry — each must build alone so its
+  // alias map doesn't leak into the main shared-chunk graph.
+  for (const { src, name, alias } of aliasedEntries) {
+    configs.push({
+      ...baseConfig,
+      entry: { [isProd ? name : `${name}.dev`]: src },
+      platform: 'browser',
+      format: 'es',
+      target: 'es2022',
+      sourcemap: true,
+      clean: false,
+      dts: false,
+      minify: isProd,
+      noExternal: [/.*/],
+      inlineOnly: false,
+      treeshake: {
+        moduleSideEffects: [
+          { test: /\/define\//, sideEffects: true },
+          { test: /\/icons\/(?:dist\/)?element\//, sideEffects: true },
+        ],
+      },
+      outDir,
+      alias: {
+        '@': new URL('./src', import.meta.url).pathname,
+        ...alias,
+      },
+      define: {
+        __DEV__: isProd ? 'false' : 'true',
+      },
+      plugins: [
+        inlineCssPlugin({ skinsDir, minify: isProd }),
+        inlineTemplatePlugin({ minify: isProd }),
+        ...(!isProd ? [dtsStubsPlugin(outDir)] : []),
+      ],
+      inputOptions: {
+        onwarn(warning, defaultHandler) {
+          if (warning.code === 'COMMONJS_VARIABLE_IN_ESM') return;
+          defaultHandler(warning);
+        },
+        ...(!isProd && {
+          resolve: {
+            conditionNames: ['development', 'import', 'browser', 'default'],
+          },
+        }),
+      },
+    });
+  }
 }
 
 export default defineConfig(configs);

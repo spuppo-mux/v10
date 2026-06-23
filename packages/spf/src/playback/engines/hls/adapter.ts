@@ -11,11 +11,13 @@ import {
 export interface SimpleHlsMediaProps {
   src: string;
   preload: '' | 'none' | 'metadata' | 'auto';
+  autoplay: boolean;
 }
 
 export const simpleHlsMediaDefaultProps: SimpleHlsMediaProps = {
   src: '',
   preload: '',
+  autoplay: false,
 };
 
 export interface SimpleHlsMediaAPI extends SimpleHlsMediaProps {
@@ -50,6 +52,7 @@ export function SimpleHlsMediaMixin<Base extends Constructor<any>>(BaseClass: Ba
     #config: SimpleHlsEngineConfig;
     #signals!: SimpleHlsEngineSignals;
     #preload: '' | 'none' | 'metadata' | 'auto' = simpleHlsMediaDefaultProps.preload;
+    #autoplay: boolean = simpleHlsMediaDefaultProps.autoplay;
 
     /** Pending loadstart listener from a deferred play() retry, if any. */
     #loadstartListener: (() => void) | null = null;
@@ -73,6 +76,9 @@ export function SimpleHlsMediaMixin<Base extends Constructor<any>>(BaseClass: Ba
     attach(mediaElement: HTMLMediaElement): void {
       super.attach?.(mediaElement);
       this.#signals.context.mediaElement.set(mediaElement);
+      if (this.#autoplay) {
+        mediaElement.autoplay = true;
+      }
     }
 
     detach(): void {
@@ -105,6 +111,32 @@ export function SimpleHlsMediaMixin<Base extends Constructor<any>>(BaseClass: Ba
     }
 
     // -------------------------------------------------------------------------
+    // autoplay — synchronous IDL attribute (WHATWG §4.8.11.2)
+    // Flips `loadActivated` so segments load without an explicit play(), and
+    // forwards to the underlying media element so the browser auto-starts
+    // once data arrives. CustomMediaElement strips host-level `autoplay`
+    // from the inner <video> when the mixin exposes it as a property, so
+    // the mixin must propagate it explicitly.
+    // -------------------------------------------------------------------------
+
+    get autoplay(): boolean {
+      return this.#autoplay;
+    }
+
+    set autoplay(value: boolean) {
+      this.#autoplay = value;
+      if (value) {
+        this.#signals.state.loadActivated.set(true);
+      }
+      const el = this.#signals.context.mediaElement.get();
+      if (el) {
+        el.autoplay = value;
+      }
+      // Setting to false doesn't pause a currently-playing element — autoplay
+      // only affects whether the browser auto-starts on the next ready window.
+    }
+
+    // -------------------------------------------------------------------------
     // src — synchronous IDL attribute (WHATWG §4.8.11.2)
     // Each assignment destroys the current engine and starts a fresh one, exactly
     // as the browser's load algorithm resets all media element state on src change.
@@ -127,6 +159,12 @@ export function SimpleHlsMediaMixin<Base extends Constructor<any>>(BaseClass: Ba
       // W3C value (which a freshly-created <video> with no attribute is not).
       if (this.#preload) {
         this.#signals.state.preload.set(this.#preload);
+      }
+
+      // Re-apply autoplay so loadActivated is true before trackLoadTriggers
+      // attaches — segments start loading immediately on the new engine.
+      if (this.#autoplay) {
+        this.#signals.state.loadActivated.set(true);
       }
 
       if (prevMediaElement) {

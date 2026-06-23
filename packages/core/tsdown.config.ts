@@ -17,6 +17,7 @@ const createConfig = (mode: PackageBuildMode): UserConfig => ({
     'dom/media/native-hls/index': './src/dom/media/native-hls/index.ts',
     'dom/media/simple-hls-audio-only/index': './src/dom/media/simple-hls-audio-only/index.ts',
     'dom/media/simple-hls/index': './src/dom/media/simple-hls/index.ts',
+    'dom/media/simple-spf-background-video/index': './src/dom/media/simple-spf-background-video/index.ts',
     'dom/media/vimeo/index': './src/dom/media/vimeo/index.ts',
     // Components
     'dom/media/mux/index': './src/dom/media/mux/index.ts',

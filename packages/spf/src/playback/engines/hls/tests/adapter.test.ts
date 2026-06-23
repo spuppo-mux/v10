@@ -350,6 +350,75 @@ describe('SimpleHlsMediaElement', () => {
   });
 
   // ---------------------------------------------------------------------------
+  // autoplay — synchronous IDL attribute (WHATWG §4.8.11.2)
+  // ---------------------------------------------------------------------------
+  describe('autoplay', () => {
+    it('returns false before any autoplay is set', () => {
+      const media = new SimpleHlsMediaElement();
+      expect(media.autoplay).toBe(false);
+    });
+
+    it('reflects the set value synchronously', () => {
+      const media = new SimpleHlsMediaElement();
+      media.autoplay = true;
+      expect(media.autoplay).toBe(true);
+    });
+
+    it('flips loadActivated immediately when set to true', () => {
+      const media = new SimpleHlsMediaElement();
+      media.autoplay = true;
+      expect(media.engine.state.loadActivated.get()).toBe(true);
+    });
+
+    it('setting autoplay to false stashes the flag but does not clear current loadActivated', () => {
+      const media = new SimpleHlsMediaElement();
+      media.autoplay = true;
+      media.autoplay = false;
+      // Already-loading segments should not be cancelled by toggling the flag off.
+      expect(media.engine.state.loadActivated.get()).toBe(true);
+    });
+
+    it('survives src reassignment — autoplay re-applies loadActivated on the new engine', () => {
+      const media = new SimpleHlsMediaElement();
+      media.autoplay = true;
+      media.src = 'https://example.com/v.m3u8';
+      expect(media.autoplay).toBe(true);
+      expect(media.engine.state.loadActivated.get()).toBe(true);
+    });
+
+    it('does not flip loadActivated when autoplay is false on src change', () => {
+      const media = new SimpleHlsMediaElement();
+      media.src = 'https://example.com/v.m3u8';
+      expect(media.engine.state.loadActivated.get()).toBeFalsy();
+    });
+
+    it('forwards autoplay to the attached media element so the browser auto-starts on data arrival', () => {
+      const media = new SimpleHlsMediaElement();
+      const el = document.createElement('video');
+      media.attach(el);
+      media.autoplay = true;
+      expect(el.autoplay).toBe(true);
+    });
+
+    it('forwards autoplay set before attach when the element is attached', () => {
+      const media = new SimpleHlsMediaElement();
+      media.autoplay = true;
+      const el = document.createElement('video');
+      media.attach(el);
+      expect(el.autoplay).toBe(true);
+    });
+
+    it('clears autoplay on the attached media element when set to false', () => {
+      const media = new SimpleHlsMediaElement();
+      const el = document.createElement('video');
+      media.attach(el);
+      media.autoplay = true;
+      media.autoplay = false;
+      expect(el.autoplay).toBe(false);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
   // destroy() — explicit teardown (separate from detach)
   // ---------------------------------------------------------------------------
   describe('destroy()', () => {

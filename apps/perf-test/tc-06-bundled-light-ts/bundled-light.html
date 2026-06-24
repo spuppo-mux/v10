@@ -3,18 +3,18 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>TC-03 · Bundled SPF + HLS.js · Config B · TS</title>
+    <title>TC-06 · Bundled SPF + hls.light · Config C · TS</title>
     <link rel="stylesheet" href="/apps/perf-test/_shared/styles.css" />
     <link rel="stylesheet" href="/packages/skins/dist/default/minimal/css/video.css" />
   </head>
 
   <body>
     <div class="shell">
-      <h1>TC-03 · Bundled · SPF + HLS.js · TS</h1>
+      <h1>TC-06 · Bundled · SPF + hls.light · TS</h1>
       <div class="meta">
-        Both engines bundled into a single CDN entry (<code>dual-hls-video</code>). The
-        <code>prefer-hlsjs</code> attribute tells the element to pick HLS.js at construction time —
-        no lazy load, no detection delay. Models a "ship both, pick on a flag" architecture.
+        Same architecture as TC-03 with hls.light in place of the full HLS.js. Both engines
+        bundled into <code>dual-hls-light-video.js</code> (built with <code>hls.js → hls.js/light</code>
+        aliased at build time). <code>prefer-hlsjs</code> selects the hls.light path.
       </div>
       <div id="root"></div>
     </div>
@@ -24,23 +24,20 @@
       import { TS_SOURCE } from '/apps/perf-test/_shared/sources.js';
 
       await import('/packages/html/cdn/video-minimal.js');
-      await import('/packages/html/cdn/media/dual-hls-video.js');
+      await import('/packages/html/cdn/media/dual-hls-light-video.js');
       markPhase('hlsjs-loaded');
 
       const root = document.getElementById('root');
       root.innerHTML = `
         <video-player>
           <video-minimal-skin>
-            <dual-hls-video id="dual" prefer-hlsjs src="${TS_SOURCE.url}" autoplay muted preload="auto" playsinline crossorigin="anonymous"></dual-hls-video>
+            <dual-hls-light-video id="dual" prefer-hlsjs src="${TS_SOURCE.url}" autoplay muted preload="auto" playsinline crossorigin="anonymous"></dual-hls-light-video>
           </video-minimal-skin>
         </video-player>
       `;
       markPlayerReady();
 
-      // The router exposes its inner media element as `.media`. The 'playing'
-      // event fires on the inner element and doesn't bubble, so attach the
-      // timing listener directly to it.
-      const dual = root.querySelector('dual-hls-video');
+      const dual = root.querySelector('dual-hls-light-video');
       attachMediaTiming(dual.media, { autoplay: true });
     </script>
   </body>

@@ -122,13 +122,15 @@
     </div>
 
     <div class="case">
-      <h2>TC-03 · Autoplay, TS Content</h2>
+      <h2>TC-03 · Bundled SPF + HLS.js · TS</h2>
       <p class="desc">
-        MPEG-TS source. SPF cannot transmux TS, so Config A is intentionally absent.
+        Both engines shipped in one bundle (<code>dual-hls-video</code>). At construction time
+        the element reads <code>prefer-hlsjs</code> and picks HLS.js. No detection delay; the
+        SPF bytes are dead weight but never instantiated. Bundled counterpart to TC-07.
       </p>
       <div class="links">
         <a class="a disabled" aria-disabled="true">Config A · n/a</a>
-        <a class="b" href="/apps/perf-test/tc-03-autoplay-ts/hlsjs.html">Config B · HLS.js</a>
+        <a class="b" href="/apps/perf-test/tc-03-autoplay-ts/hlsjs.html">Config B · Bundled SPF + HLS.js</a>
       </div>
     </div>
 
@@ -157,14 +159,14 @@
     </div>
 
     <div class="case">
-      <h2>TC-06 · Autoplay CMAF · hls.light bundled</h2>
+      <h2>TC-06 · Bundled SPF + hls.light · TS</h2>
       <p class="desc">
-        Drop-in swap of hls.js for hls.light, same architecture as TC-02 Config B. Custom
-        <code>&lt;hls-light-video&gt;</code> element built from the same source as
-        <code>&lt;hls-video&gt;</code> with <code>hls.js</code> aliased to <code>hls.js/light</code>.
+        Same architecture as TC-03 with hls.light in place of the full HLS.js. The
+        <code>dual-hls-light-video</code> bundle aliases <code>hls.js</code> to
+        <code>hls.js/light</code> at build time. Bundled counterpart to TC-08.
       </p>
       <div class="links">
-        <a class="b" href="/apps/perf-test/tc-06-hlslight-cmaf/hlslight.html">Config C · hls.light</a>
+        <a class="b" href="/apps/perf-test/tc-06-bundled-light-ts/bundled-light.html">Config C · Bundled SPF + hls.light</a>
       </div>
     </div>
 

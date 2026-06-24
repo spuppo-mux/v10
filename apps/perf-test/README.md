@@ -8,18 +8,44 @@ Static HTML test pages backing the **Video.js Performance Test Plan — SPF vs H
 | --- | --- | --- | --- |
 | TC-01 — Page load, no autoplay | [`tc-01-no-autoplay/spf.html`](tc-01-no-autoplay/spf.html) | [`tc-01-no-autoplay/hlsjs.html`](tc-01-no-autoplay/hlsjs.html) | — |
 | TC-02 — Autoplay, CMAF | [`tc-02-autoplay-cmaf/spf.html`](tc-02-autoplay-cmaf/spf.html) | [`tc-02-autoplay-cmaf/hlsjs.html`](tc-02-autoplay-cmaf/hlsjs.html) | — |
-| TC-03 — Autoplay, TS | _n/a — SPF cannot play TS_ | [`tc-03-autoplay-ts/hlsjs.html`](tc-03-autoplay-ts/hlsjs.html) | — |
+| TC-03 — Bundled SPF + HLS.js (TS) | _n/a — SPF cannot play TS_ | [`tc-03-autoplay-ts/hlsjs.html`](tc-03-autoplay-ts/hlsjs.html) | — |
 | TC-04 — Background / ambient | [`tc-04-background/spf.html`](tc-04-background/spf.html) | [`tc-04-background/hlsjs.html`](tc-04-background/hlsjs.html) | — |
 | TC-05 — Warm cache | reuses TC-02 pages | reuses TC-02 pages | see [`tc-05-warm-cache/README.md`](tc-05-warm-cache/README.md) |
-| TC-06 — Autoplay CMAF, hls.light | — | — | Config C: [`tc-06-hlslight-cmaf/hlslight.html`](tc-06-hlslight-cmaf/hlslight.html) |
+| TC-06 — Bundled SPF + hls.light (TS) | — | — | Config C: [`tc-06-bundled-light-ts/bundled-light.html`](tc-06-bundled-light-ts/bundled-light.html) |
 | TC-07 — Sequenced lazy: SPF → HLS.js (TS) | — | — | Config D: [`tc-07-sequenced-hlsjs/sequenced.html`](tc-07-sequenced-hlsjs/sequenced.html) |
 | TC-08 — Sequenced lazy: SPF → hls.light (TS) | — | — | Config E: [`tc-08-sequenced-hlslight/sequenced.html`](tc-08-sequenced-hlslight/sequenced.html) |
 
 Open [`index.html`](index.html) for a clickable landing page.
 
-### TC-06: `<hls-light-video>` — a videojs custom element backed by hls.light
+### The bundled-vs-lazy comparison (TC-03/06 vs TC-07/08)
 
-TC-06 isn't raw hls.light on a plain `<video>`. The repo gains a new custom element `<hls-light-video>` built from the same source as `<hls-video>`, with `hls.js` aliased to `hls.js/light` at bundle time. This keeps the comparison architectural-symmetric with TC-02 Config B (Video.js wrapper + lib) — the only variable is the lib. The bundle is built by a separate config block in [`packages/html/tsdown.cdn.config.ts`](../../packages/html/tsdown.cdn.config.ts) so its alias doesn't leak into the main shared-chunk graph.
+The five-case matrix the perf plan answers:
+
+| Case | Page | Bundle | Engine pick |
+| --- | --- | --- | --- |
+| 1. Happy path | TC-02 SPF | SPF only | n/a — CMAF |
+| 2. Bundled, HLS.js, TS | TC-03 | SPF + HLS.js together | `prefer-hlsjs` attribute, set at construction |
+| 3. Bundled, hls.light, TS | TC-06 | SPF + hls.light together | `prefer-hlsjs` attribute, set at construction |
+| 4. Lazy, HLS.js, TS | TC-07 | SPF first, HLS.js fetched after 20 ms mock | Element swap |
+| 5. Lazy, hls.light, TS | TC-08 | SPF first, hls.light fetched after 20 ms mock | Element swap |
+
+Delta to read off the spreadsheet:
+
+- **TC-07 − TC-03** = the lazy-vs-bundled cost on full HLS.js (endpoint mock + lazy fetch + element swap)
+- **TC-08 − TC-06** = same delta on hls.light
+- **TC-06 − TC-03** = bundled HLS.js vs bundled hls.light (architectural-symmetric library swap)
+- **TC-08 − TC-07** = same swap on the lazy path
+
+### `<dual-hls-video>` / `<dual-hls-light-video>` — the bundled router (TC-03, TC-06)
+
+Both engines ship in one CDN bundle. A thin router element reads a boolean `prefer-hlsjs` attribute at construction time and renders one of two inner custom elements:
+
+- `prefer-hlsjs` absent → `<simple-hls-video>` (SPF)
+- `prefer-hlsjs` present → `<hls-video>` (or `<hls-light-video>` on the `-light` variant)
+
+The router exposes its inner element as `.media` so the timing helper can attach `'playing'` listeners to the real media element. No runtime engine switching, no fallback logic, no failure detection — these tests always play TS, so the bundled cases always set `prefer-hlsjs`. The SPF bytes ship but never instantiate; that overhead is exactly what cases 2/3 measure against cases 4/5.
+
+The light variant is a separate aliased bundle built by the same `aliasedEntries` machinery as `<hls-light-video>` — `hls.js` is rewritten to `hls.js/light` for the whole bundle including the inner `<hls-light-video>` element.
 
 ### TC-07 / TC-08: sequenced lazy load via element swap
 

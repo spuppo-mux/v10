@@ -34,6 +34,7 @@ const media = [
   'simple-hls-audio-only',
   'simple-hls-video',
   'simple-spf-background-video',
+  'dual-hls-video',
   'dash-video',
 ];
 
@@ -56,6 +57,11 @@ const aliasedEntries = [
   {
     src: 'src/cdn/media/hls-light-video.ts',
     name: 'media/hls-light-video',
+    alias: { 'hls.js': 'hls.js/light' },
+  },
+  {
+    src: 'src/cdn/media/dual-hls-light-video.ts',
+    name: 'media/dual-hls-light-video',
     alias: { 'hls.js': 'hls.js/light' },
   },
 ];

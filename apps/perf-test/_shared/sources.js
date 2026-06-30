@@ -6,13 +6,11 @@
 //   appends fMP4 segments directly and does not transmux TS).
 
 export const CMAF_SOURCE = {
-  // sandbox 'hls-3' — Dancing Dude
-  url: 'https://stream.mux.com/lhnU49l1VGi3zrTAZhDm9LUUxSjpaPW9BL4jY25Kwo4.m3u8',
-  label: 'HLS / fMP4 — Dancing Dude',
+  url: 'https://stream.mux.com/QEN5L100graTl2lou400qjBgcUTyZa7H8016ftmDNPpOKg.m3u8',
+  label: 'HLS / fMP4 — Premium - Product.mp4 (CMAF)',
 };
 
 export const TS_SOURCE = {
-  // sandbox 'hls-1' — Big Buck Bunny (TS)
-  url: 'https://stream.mux.com/VcmKA6aqzIzlg3MayLJDnbF55kX00mds028Z65QxvBYaA.m3u8',
-  label: 'HLS / TS — Big Buck Bunny',
+  url: 'https://stream.mux.com/N4cSOWgLf01h600mNqOQwiDlmNHt5icPTW28pa6SisPWY.m3u8',
+  label: 'HLS / fMP4 — Plus - Product.mp4 (TS)',
 };

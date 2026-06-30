@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CMAF · D · Lazy SPF → hls.js</title>
+    <link rel="stylesheet" href="/apps/perf-test/_shared/styles.css" />
+    <link rel="stylesheet" href="/packages/skins/dist/default/minimal/css/video.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <h1>CMAF · D — Lazy SPF → hls.js</h1>
+      <div class="meta">
+        Lazy architecture meets the happy path. SPF loads, 20 ms mock endpoint returns
+        <code>"cmaf"</code>, the page <em>does not</em> import hls.js, and SPF plays the asset.
+        Measures the cost of the lazy-architecture detection step when no lazy fetch is needed.
+      </div>
+      <div id="root"></div>
+    </div>
+
+    <script type="module">
+      import { attachMediaTiming, markPhase, markPlayerReady } from '/apps/perf-test/_shared/perf.js';
+      import { CMAF_SOURCE } from '/apps/perf-test/_shared/sources.js';
+
+      // Phase 1 — SPF + player shell load.
+      await import('/packages/html/cdn/video-minimal.js');
+      await import('/packages/html/cdn/media/simple-hls-video.js');
+
+      const root = document.getElementById('root');
+      root.innerHTML = `
+        <video-player>
+          <video-minimal-skin>
+            <simple-hls-video id="media" playsinline crossorigin="anonymous"></simple-hls-video>
+          </video-minimal-skin>
+        </video-player>
+      `;
+      markPhase('spf-init');
+      markPlayerReady();
+
+      // Phase 2 — mocked format-detection endpoint (20 ms simulated latency).
+      const format = await new Promise((resolve) => {
+        setTimeout(() => resolve('cmaf'), 20);
+      });
+      markPhase('endpoint-response');
+
+      // CMAF happy path — skip the lazy load entirely, hand the source to SPF.
+      const media = document.getElementById('media');
+      media.setAttribute('autoplay', '');
+      media.setAttribute('muted', '');
+      media.setAttribute('preload', 'auto');
+      media.setAttribute('src', CMAF_SOURCE.url);
+      attachMediaTiming(media, { autoplay: true });
+    </script>
+  </body>
+</html>

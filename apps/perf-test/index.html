@@ -1,199 +1,221 @@
 <!doctype html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SPF vs HLS.js · Performance Test Plan</title>
+    <link rel="stylesheet" href="/apps/perf-test/_shared/styles.css" />
+    <style>
+      .index {
+        width: 100%;
+        max-width: 880px;
+        padding: 32px 20px 80px;
+        margin: 0 auto;
+      }
+      .index h1 {
+        margin: 0 0 8px;
+        font-size: 22px;
+        font-weight: 600;
+      }
+      .index .intro {
+        margin: 0 0 28px;
+        font-size: 14px;
+        line-height: 1.55;
+        opacity: 0.7;
+      }
+      .index h2 {
+        margin: 32px 0 12px;
+        font-size: 13px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        opacity: 0.55;
+      }
+      .grid {
+        display: grid;
+        gap: 10px;
+      }
+      .case {
+        display: flex;
+        gap: 16px;
+        align-items: stretch;
+        padding: 14px 18px;
+        background: #141416;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 8px;
+      }
+      .case .badge {
+        flex-shrink: 0;
+        width: 32px;
+        height: 32px;
+        font-size: 14px;
+        font-weight: 700;
+        line-height: 32px;
+        text-align: center;
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 6px;
+      }
+      .case .body {
+        flex: 1;
+      }
+      .case h3 {
+        margin: 0 0 2px;
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+      }
+      .case .desc {
+        margin: 0;
+        font-size: 12px;
+        line-height: 1.45;
+        opacity: 0.6;
+      }
+      .case .link {
+        display: inline-block;
+        align-self: center;
+        padding: 6px 12px;
+        font-size: 12px;
+        font-weight: 600;
+        color: inherit;
+        text-decoration: none;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 4px;
+      }
+      .case .link:hover {
+        background: rgba(255, 255, 255, 0.12);
+      }
+      .case.control .badge {
+        color: #7ee787;
+        background: rgba(126, 231, 135, 0.12);
+      }
+      .case.control .link {
+        color: #7ee787;
+        background: rgba(126, 231, 135, 0.08);
+        border-color: rgba(126, 231, 135, 0.32);
+      }
+      .case.na {
+        opacity: 0.35;
+      }
+      .case.na .link {
+        pointer-events: none;
+      }
+      .footer {
+        margin-top: 28px;
+        font-size: 12px;
+        line-height: 1.5;
+        opacity: 0.55;
+      }
+      .footer a {
+        color: inherit;
+      }
+    </style>
+  </head>
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SPF vs HLS.js · Performance Test Plan</title>
-  <link rel="stylesheet" href="/apps/perf-test/_shared/styles.css" />
-  <style>
-    .index {
-      width: 100%;
-      max-width: 720px;
-      padding: 32px 20px 80px;
-      margin: 0 auto;
-    }
-
-    .index h1 {
-      margin: 0 0 8px;
-      font-size: 22px;
-      font-weight: 600;
-    }
-
-    .index p {
-      margin: 0 0 28px;
-      font-size: 14px;
-      line-height: 1.55;
-      opacity: 0.7;
-    }
-
-    .case {
-      padding: 16px 18px;
-      margin-bottom: 12px;
-      background: #141416;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 8px;
-    }
-
-    .case h2 {
-      margin: 0 0 4px;
-      font-size: 14px;
-      font-weight: 600;
-      letter-spacing: 0.02em;
-    }
-
-    .case .desc {
-      margin: 0 0 12px;
-      font-size: 13px;
-      line-height: 1.5;
-      opacity: 0.65;
-    }
-
-    .links {
-      display: flex;
-      gap: 10px;
-    }
-
-    .links a {
-      display: inline-block;
-      padding: 6px 12px;
-      font-size: 12px;
-      font-weight: 600;
-      color: inherit;
-      text-decoration: none;
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 4px;
-    }
-
-    .links a:hover {
-      background: rgba(255, 255, 255, 0.12);
-    }
-
-    .links a.b {
-      color: #ffa657;
-      background: rgba(255, 166, 87, 0.08);
-      border-color: rgba(255, 166, 87, 0.4);
-    }
-
-    .links a.a {
-      color: #7ee787;
-      background: rgba(126, 231, 135, 0.08);
-      border-color: rgba(126, 231, 135, 0.4);
-    }
-
-    .links a.disabled {
-      pointer-events: none;
-      opacity: 0.3;
-    }
-  </style>
-</head>
-
-<body>
-  <div class="index">
-    <h1>SPF vs HLS.js · Performance Test Plan</h1>
-    <p>
-      Each test case opens a minimal page that loads the player + media element via the
-      <code>packages/html/cdn/</code> bundles. The on-page overlay reports page load, player init,
-      and first-frame timing; capture <em>Bundle Transfer Size</em> from the DevTools Network
-      tab.
-    </p>
-
-    <div class="case">
-      <h2>TC-01 · Page Load, No Autoplay</h2>
-      <p class="desc">
-        Player JS loads + initializes; no playback. Isolates parse/init overhead of the bundle.
+  <body>
+    <div class="index">
+      <h1>SPF vs HLS.js · Performance Test Plan</h1>
+      <p class="intro">
+        Five player configurations measured on two content types. <strong>Config A</strong> (SPF only)
+        is the control. Open any cell to run the test page — DevTools overlay shows
+        <code>pageLoadMs</code>, <code>playerInitMs</code>, <code>firstFrameMs</code>, and the
+        sequenced phases where applicable.
       </p>
-      <div class="links">
-        <a class="a" href="/apps/perf-test/tc-01-no-autoplay/spf.html">Config A · SPF</a>
-        <a class="b" href="/apps/perf-test/tc-01-no-autoplay/hlsjs.html">Config B · HLS.js</a>
-      </div>
-    </div>
 
-    <div class="case">
-      <h2>TC-02 · Autoplay, CMAF Content</h2>
-      <p class="desc">
-        CMAF source, muted autoplay; primary signal is time to first frame.
+      <h2>CMAF content (Premium asset)</h2>
+      <div class="grid">
+        <div class="case control">
+          <div class="badge">A</div>
+          <div class="body">
+            <h3>SPF only — control</h3>
+            <p class="desc">Only SPF shipped, plays directly. The baseline every other row compares against.</p>
+          </div>
+          <a class="link" href="/apps/perf-test/cmaf/a-spf.html">Open</a>
+        </div>
+        <div class="case">
+          <div class="badge">B</div>
+          <div class="body">
+            <h3>Bundled SPF + hls.js</h3>
+            <p class="desc">Both engines bundled. Router picks SPF for CMAF. Measures the hls.js bundle tax.</p>
+          </div>
+          <a class="link" href="/apps/perf-test/cmaf/b-bundled-hlsjs.html">Open</a>
+        </div>
+        <div class="case">
+          <div class="badge">C</div>
+          <div class="body">
+            <h3>Bundled SPF + hls.light</h3>
+            <p class="desc">Same as B with the lighter hls.light bundle.</p>
+          </div>
+          <a class="link" href="/apps/perf-test/cmaf/c-bundled-hlslight.html">Open</a>
+        </div>
+        <div class="case">
+          <div class="badge">D</div>
+          <div class="body">
+            <h3>Lazy SPF → hls.js</h3>
+            <p class="desc">SPF loads, 20 ms mock returns "cmaf" — no lazy fetch. Measures the detection step's overhead on the happy path.</p>
+          </div>
+          <a class="link" href="/apps/perf-test/cmaf/d-lazy-hlsjs.html">Open</a>
+        </div>
+        <div class="case">
+          <div class="badge">E</div>
+          <div class="body">
+            <h3>Lazy SPF → hls.light</h3>
+            <p class="desc">Identical to D in this row — the lazy library never loads. Exists for matrix symmetry.</p>
+          </div>
+          <a class="link" href="/apps/perf-test/cmaf/e-lazy-hlslight.html">Open</a>
+        </div>
+      </div>
+
+      <h2>TS content (Plus asset)</h2>
+      <div class="grid">
+        <div class="case na">
+          <div class="badge">A</div>
+          <div class="body">
+            <h3>n/a — SPF cannot play TS</h3>
+            <p class="desc">Use the CMAF · A row as the reference baseline.</p>
+          </div>
+          <a class="link">—</a>
+        </div>
+        <div class="case">
+          <div class="badge">B</div>
+          <div class="body">
+            <h3>Bundled SPF + hls.js</h3>
+            <p class="desc">Both engines bundled. Router picks hls.js via <code>prefer-hlsjs</code>. SPF bytes shipped, never instantiated.</p>
+          </div>
+          <a class="link" href="/apps/perf-test/ts/b-bundled-hlsjs/index.html">Open</a>
+        </div>
+        <div class="case">
+          <div class="badge">C</div>
+          <div class="body">
+            <h3>Bundled SPF + hls.light</h3>
+            <p class="desc">Same as B with hls.light. Compare against TS · B for the bundled library-swap delta.</p>
+          </div>
+          <a class="link" href="/apps/perf-test/ts/c-bundled-hlslight/index.html">Open</a>
+        </div>
+        <div class="case">
+          <div class="badge">D</div>
+          <div class="body">
+            <h3>Lazy SPF → hls.js</h3>
+            <p class="desc">SPF mounts, 20 ms mock returns "ts", lazy-imports hls.js bundle, swap. The lazy architecture's full cost on TS.</p>
+          </div>
+          <a class="link" href="/apps/perf-test/ts/d-lazy-hlsjs/index.html">Open</a>
+        </div>
+        <div class="case">
+          <div class="badge">E</div>
+          <div class="body">
+            <h3>Lazy SPF → hls.light</h3>
+            <p class="desc">Same as D but the lazy bundle is hls.light. Isolates the library cost on the lazy path.</p>
+          </div>
+          <a class="link" href="/apps/perf-test/ts/e-lazy-hlslight/index.html">Open</a>
+        </div>
+      </div>
+
+      <p class="footer">
+        Orthogonal/legacy tests (no-autoplay, background ambient, warm cache, standalone hls.js) live under
+        <a href="/apps/perf-test/extras/">extras/</a>. See the
+        <a href="/apps/perf-test/README.md">README</a> for measurement procedure and the bundle-vs-lazy
+        comparison rationale.
       </p>
-      <div class="links">
-        <a class="a" href="/apps/perf-test/tc-02-autoplay-cmaf/spf.html">Config A · SPF</a>
-        <a class="b" href="/apps/perf-test/tc-02-autoplay-cmaf/hlsjs.html">Config B · HLS.js</a>
-      </div>
     </div>
-
-    <div class="case">
-      <h2>TC-03 · Bundled SPF + HLS.js · TS</h2>
-      <p class="desc">
-        Both engines shipped in one bundle (<code>dual-hls-video</code>). At construction time
-        the element reads <code>prefer-hlsjs</code> and picks HLS.js. No detection delay; the
-        SPF bytes are dead weight but never instantiated. Bundled counterpart to TC-07.
-      </p>
-      <div class="links">
-        <a class="a disabled" aria-disabled="true">Config A · n/a</a>
-        <a class="b" href="/apps/perf-test/tc-03-autoplay-ts/hlsjs.html">Config B · Bundled SPF + HLS.js</a>
-      </div>
-    </div>
-
-    <div class="case">
-      <h2>TC-04 · Background / Ambient Video</h2>
-      <p class="desc">
-        Muted autoplay loop styled as a fullscreen background — the SPF-favored use case.
-      </p>
-      <div class="links">
-        <a class="a" href="/apps/perf-test/tc-04-background/spf.html">Config A · SPF</a>
-        <a class="b" href="/apps/perf-test/tc-04-background/hlsjs.html">Config B · HLS.js</a>
-      </div>
-    </div>
-
-    <div class="case">
-      <h2>TC-05 · Repeat Loads / Warm Cache</h2>
-      <p class="desc">
-        Reload TC-02 pages 3× with cache enabled. See
-        <a href="/apps/perf-test/tc-05-warm-cache/README.md">tc-05-warm-cache/README.md</a>
-        for the full procedure.
-      </p>
-      <div class="links">
-        <a class="a" href="/apps/perf-test/tc-02-autoplay-cmaf/spf.html">Config A · SPF (TC-02)</a>
-        <a class="b" href="/apps/perf-test/tc-02-autoplay-cmaf/hlsjs.html">Config B · HLS.js (TC-02)</a>
-      </div>
-    </div>
-
-    <div class="case">
-      <h2>TC-06 · Bundled SPF + hls.light · TS</h2>
-      <p class="desc">
-        Same architecture as TC-03 with hls.light in place of the full HLS.js. The
-        <code>dual-hls-light-video</code> bundle aliases <code>hls.js</code> to
-        <code>hls.js/light</code> at build time. Bundled counterpart to TC-08.
-      </p>
-      <div class="links">
-        <a class="b" href="/apps/perf-test/tc-06-bundled-light-ts/bundled-light.html">Config C · Bundled SPF + hls.light</a>
-      </div>
-    </div>
-
-    <div class="case">
-      <h2>TC-07 · Sequenced lazy · SPF → HLS.js (TS path)</h2>
-      <p class="desc">
-        SPF media element mounts. After a 20 ms mocked format-detection endpoint,
-        the page dynamically imports the full <code>hls-video</code> bundle and swaps
-        in <code>&lt;hls-video&gt;</code> for TS playback. Captures four <code>performance.mark()</code>
-        phases.
-      </p>
-      <div class="links">
-        <a class="b" href="/apps/perf-test/tc-07-sequenced-hlsjs/sequenced.html">Config D · SPF → HLS.js</a>
-      </div>
-    </div>
-
-    <div class="case">
-      <h2>TC-08 · Sequenced lazy · SPF → hls.light (optional)</h2>
-      <p class="desc">
-        Identical to TC-07 with hls.light loaded instead of the full HLS.js bundle.
-        Run only after TC-06 + TC-07 results justify the optimization.
-      </p>
-      <div class="links">
-        <a class="b" href="/apps/perf-test/tc-08-sequenced-hlslight/sequenced.html">Config E · SPF → hls.light</a>
-      </div>
-    </div>
-  </div>
-</body>
-
+  </body>
 </html>

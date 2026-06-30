@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CMAF · B · Bundled SPF + hls.js</title>
+    <link rel="stylesheet" href="/apps/perf-test/_shared/styles.css" />
+    <link rel="stylesheet" href="/packages/skins/dist/default/minimal/css/video.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <h1>CMAF · B — Bundled SPF + hls.js</h1>
+      <div class="meta">
+        Both engines bundled (<code>dual-hls-video</code>). CMAF content, so the router picks SPF
+        (no <code>prefer-hlsjs</code> attribute). Measures the bundle-weight tax of shipping hls.js
+        on the SPF happy path.
+      </div>
+      <div id="root"></div>
+    </div>
+
+    <script type="module">
+      import { attachMediaTiming, markPhase, markPlayerReady } from '/apps/perf-test/_shared/perf.js';
+      import { CMAF_SOURCE } from '/apps/perf-test/_shared/sources.js';
+
+      await import('/packages/html/cdn/video-minimal.js');
+      await import('/packages/html/cdn/media/dual-hls-video.js');
+      markPhase('hlsjs-loaded');
+
+      const root = document.getElementById('root');
+      root.innerHTML = `
+        <video-player>
+          <video-minimal-skin>
+            <dual-hls-video id="dual" src="${CMAF_SOURCE.url}" autoplay muted preload="auto" playsinline crossorigin="anonymous"></dual-hls-video>
+          </video-minimal-skin>
+        </video-player>
+      `;
+      markPlayerReady();
+
+      const dual = root.querySelector('dual-hls-video');
+      attachMediaTiming(dual.media, { autoplay: true });
+    </script>
+  </body>
+</html>

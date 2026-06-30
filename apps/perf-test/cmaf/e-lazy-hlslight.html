@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CMAF · E · Lazy SPF → hls.light</title>
+    <link rel="stylesheet" href="/apps/perf-test/_shared/styles.css" />
+    <link rel="stylesheet" href="/packages/skins/dist/default/minimal/css/video.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <h1>CMAF · E — Lazy SPF → hls.light</h1>
+      <div class="meta">
+        Identical flow to <strong>CMAF · D</strong> — only the would-be lazy library differs, and
+        it never loads on CMAF. Numbers should match D within noise; this page exists for matrix
+        completeness so the TS · E counterpart has a CMAF reference row.
+      </div>
+      <div id="root"></div>
+    </div>
+
+    <script type="module">
+      import { attachMediaTiming, markPhase, markPlayerReady } from '/apps/perf-test/_shared/perf.js';
+      import { CMAF_SOURCE } from '/apps/perf-test/_shared/sources.js';
+
+      await import('/packages/html/cdn/video-minimal.js');
+      await import('/packages/html/cdn/media/simple-hls-video.js');
+
+      const root = document.getElementById('root');
+      root.innerHTML = `
+        <video-player>
+          <video-minimal-skin>
+            <simple-hls-video id="media" playsinline crossorigin="anonymous"></simple-hls-video>
+          </video-minimal-skin>
+        </video-player>
+      `;
+      markPhase('spf-init');
+      markPlayerReady();
+
+      const format = await new Promise((resolve) => {
+        setTimeout(() => resolve('cmaf'), 20);
+      });
+      markPhase('endpoint-response');
+
+      const media = document.getElementById('media');
+      media.setAttribute('autoplay', '');
+      media.setAttribute('muted', '');
+      media.setAttribute('preload', 'auto');
+      media.setAttribute('src', CMAF_SOURCE.url);
+      attachMediaTiming(media, { autoplay: true });
+    </script>
+  </body>
+</html>

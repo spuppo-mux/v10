@@ -544,10 +544,10 @@ You can also write to the media element directly. That is safe because player st
 | `player.duration()` | `duration` in player state, or `media.duration` |
 | `player.volume()`, `player.muted()` | the player's `setVolume`, `toggleMuted`, or `media.volume`, `media.muted` |
 | `player.playbackRate()` | the player's `setPlaybackRate`, or `media.playbackRate` |
-| `player.src({ src, type })` | set `src` on the media |
+| `player.src({ src, type })` | set `src` on the media or replace the media element (`<video>` tag, `<hlsjs-video>`, `<dash-video>`, etc) |
 | `player.requestFullscreen()`, `exitFullscreen()` | the player's `requestFullscreen`, `exitFullscreen`, `toggleFullscreen` |
-| `player.textTracks()`, `addRemoteTextTrack()` | `<track>` elements, and `textTrackList` in player state |
-| `player.audioTracks()` | `audioTracks` in player state |
+| `player.textTracks()`, `addRemoteTextTrack()` | `<track>` elements, and `textTrackList` in player state, `textTracks` in media |
+| `player.audioTracks()` | `audioTrackList` in player state, `audioTracks` in media |
 | `player.error()` | `error` in player state |
 | `player.dispose()` | remove the element, or unmount the component |
 | `player.tech()` | the media component's public `engine` escape hatch, where one exists; in React, reach it through `useMedia()` |

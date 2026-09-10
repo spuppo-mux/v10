@@ -1,5 +1,6 @@
 import cdnPackage from '../../packages/cdn/package.json' with { type: 'json' };
 import htmlPackage from '../../packages/html/package.json' with { type: 'json' };
+import utilsPackage from '../../packages/utils/package.json' with { type: 'json' };
 
 // Always https://videojs.org. Unlike Astro.site, which varies per deploy
 // (e.g. deploy preview URLs), this is stable for canonical URLs and other
@@ -18,8 +19,10 @@ export const MUX_SUPPORT_URL = 'https://www.mux.com/sales-contact?form=sales&utm
 export const THEME_KEY = 'vjs-site-theme';
 export const BANNER_DISMISS_KEY = 'vjs-legacy-banner-dismissed';
 export const BLOG_PAGE_SIZE = 10;
+export const CDN_URL_BASE = `https://cdn.jsdelivr.net/npm`;
 export const VJS10_VERSION = htmlPackage.version;
-export const VJS10_CDN_BASE = `https://cdn.jsdelivr.net/npm/@videojs/cdn@${cdnPackage.version}`;
+export const VJS10_CDN_BASE = `${CDN_URL_BASE}/@videojs/cdn@${cdnPackage.version}`;
+export const VJS10_UTILS_CDN_BASE = `${CDN_URL_BASE}/@videojs/utils@${utilsPackage.version}`;
 export const VJS10_CDN_ARCHIVE_VERSION = cdnPackage.version;
 
 export function isPrereleaseSite(siteUrl: URL | undefined): boolean {

@@ -646,6 +646,39 @@ That's what <DocsLink slug="reference/html-create-player">`createPlayer`</DocsLi
 That's what <DocsLink slug="reference/create-player">`createPlayer`</DocsLink> is for. Hand it a feature list and you get back a `Player` component and a `usePlayer` hook, the same pair every preset is built from.
 </FrameworkCase>
 
+## Moved utilities
+
+v8 put a handful of utilities on the `videojs` global for anyone building a custom component or plugin: `videojs.time.formatTime`, `videojs.dom`, `videojs.fn.throttle`, and a few others. There's no global in v10, but the same job is covered by [`@videojs/utils`](https://www.npmjs.com/package/@videojs/utils).
+
+| Video.js 8 | Video.js v10 |
+|---|---|
+| `videojs.time.formatTime(seconds, guide)` | `formatTime(seconds, guide)` from `@videojs/utils/time` |
+| a hand-rolled remaining-time or percent string | `formatTimeAsPhrase(seconds)` and `formatPercent(fraction)`, from `@videojs/utils/time` and `@videojs/utils/percent` |
+| `videojs.fn.throttle(fn, wait)` | `throttle(fn, ms)` from `@videojs/utils/function` |
+| `videojs.dom.isEl(value)` and its type-specific cousins | `isHTMLVideoElement`, `isHTMLMediaElement`, `isDocument`, and other narrowing checks from `@videojs/utils/dom` |
+| `videojs.obj.merge(a, b)` | `defaults(object, defaultValues)` from `@videojs/utils/object`, alongside `pick`, `omit`, `deepEqual`, and `shallowEqual` |
+
+These are worth reaching for before writing your own when extending the player. For example, `formatTime` is the exact digital-clock formatting the packaged skins use for their own time displays, so a custom one will match.
+The package is split into subpaths, so you can import only the module you need. Other than `time`, it includes `array`, `events`, `i18n`, `jwt`, `predicate`, `string`, and `types` subpaths for anything else a custom component or plugin replacement needs.
+
+Import the util function directly with a `<script>` tag:
+
+```html
+<script src="
+    {{VJS10_UTILS_CDN_BASE}}/dist/time/formatTime.min.js
+"></script>
+```
+
+Or with a bundler:
+
+```bash
+npm install @videojs/utils
+```
+
+```js
+import { formatTime } from '@videojs/utils/time';
+```
+
 ## Known gaps
 
 Ordered roughly by how likely each is to block a v8 migration.

@@ -459,6 +459,59 @@ describe('HlsJsTextTracksMixin', () => {
     }
   });
 
+  it('refreshes the cues of a closed-caption track once when it is selected', () => {
+    const { engine, video, restore } = mount();
+
+    try {
+      (engine as any).emit(Hls.Events.NON_NATIVE_TEXT_TRACKS_FOUND, SUBTITLE_TRACKS_FOUND);
+      (engine as any).emit(Hls.Events.NON_NATIVE_TEXT_TRACKS_FOUND, CC_TRACK_FOUND);
+      (engine as any).emit(Hls.Events.CUES_PARSED, {
+        type: 'captions',
+        track: 'textTrack1',
+        cues: [{ id: 'c1' } as TextTrackCue],
+      });
+
+      const cc = [...video.querySelectorAll('track')].find((el) => el.id === 'textTrack1')!;
+      const ccTrack = cc.track as unknown as FakeTextTrack;
+      const before = ccTrack.addCueCalls;
+
+      ccTrack.mode = 'showing';
+      expect(ccTrack.addCueCalls).toBe(before + 1);
+
+      (engine as any).emit(Hls.Events.CUES_PARSED, {
+        type: 'captions',
+        track: 'textTrack1',
+        cues: [{ id: 'c2' } as TextTrackCue],
+      });
+      expect(ccTrack.addCueCalls).toBe(before + 2);
+    } finally {
+      restore();
+    }
+  });
+
+  it('refreshes a closed-caption track on a stream without subtitle playlists', () => {
+    const { engine, video, restore } = mount();
+
+    try {
+      (engine as any).subtitleTracks = [];
+      (engine as any).emit(Hls.Events.NON_NATIVE_TEXT_TRACKS_FOUND, CC_TRACK_FOUND);
+      (engine as any).emit(Hls.Events.CUES_PARSED, {
+        type: 'captions',
+        track: 'textTrack1',
+        cues: [{ id: 'c1' } as TextTrackCue],
+      });
+
+      const ccTrack = [...video.querySelectorAll('track')][0]!.track as unknown as FakeTextTrack;
+      const before = ccTrack.addCueCalls;
+
+      ccTrack.mode = 'showing';
+
+      expect(ccTrack.addCueCalls).toBe(before + 1);
+    } finally {
+      restore();
+    }
+  });
+
   it('does not re-add the showing track cues on every forwarded cue batch', () => {
     const { engine, video, restore } = mount();
 

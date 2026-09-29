@@ -219,8 +219,6 @@ export function HlsJsTextTracksMixin<Base extends Constructor<HlsEngineHost>>(Ba
       let refreshedTrackId: string | undefined;
 
       const onTextTrackChange = () => {
-        if (!engine.subtitleTracks.length) return;
-
         const showingTrack = Array.from(media.textTracks).find((textTrack) => {
           return textTrack.id && textTrack.mode === 'showing' && isCaptionOrSubtitleTrack(textTrack);
         });
@@ -230,6 +228,14 @@ export function HlsJsTextTracksMixin<Base extends Constructor<HlsEngineHost>>(Ba
 
           return;
         }
+
+        // CEA-608 tracks are fed from the video stream, so hls.js never selects them and a stream may carry them
+        // without any subtitle playlist.
+        const ccShowing = Array.from(
+          media.querySelectorAll<HTMLTrackElement>(`track[${CC_TRACK_ATTR}]`),
+          (trackEl) => trackEl.track
+        ).includes(showingTrack);
+        if (!ccShowing && !engine.subtitleTracks.length) return;
 
         const currentHlsTrack = engine.subtitleTracks[engine.subtitleTrack];
 
@@ -256,7 +262,7 @@ export function HlsJsTextTracksMixin<Base extends Constructor<HlsEngineHost>>(Ba
           if (idx >= 0) engine.subtitleTrack = idx;
         }
 
-        if (showingTrack.id === hlsTrackId && showingTrack.id !== refreshedTrackId) {
+        if ((ccShowing || showingTrack.id === hlsTrackId) && showingTrack.id !== refreshedTrackId) {
           // Refresh the cues after a texttrack mode change to fix a Chrome bug causing the captions not to render.
           // Only on a change of which track is showing: re-adding every cue on each forwarded CEA-608 batch tears
           // down and re-renders the active cue several times a second.
